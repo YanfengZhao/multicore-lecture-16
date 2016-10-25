@@ -1,0 +1,212 @@
+%
+% This is the LaTeX template file for lecture notes for EE 382C/EE 361C.
+%
+% To familiarize yourself with this template, the body contains
+% some examples of its use.  Look them over.  Then you can
+% run LaTeX on this file.  After you have LaTeXed this file then
+% you can look over the result either by printing it out with
+% dvips or using xdvi.
+%
+% This template is based on the template for Prof. Sinclair's CS 270.
+
+\documentclass[twoside]{article}
+\usepackage{graphics}
+\setlength{\oddsidemargin}{0.25 in}
+\setlength{\evensidemargin}{-0.25 in}
+\setlength{\topmargin}{-0.6 in}
+\setlength{\textwidth}{6.5 in}
+\setlength{\textheight}{8.5 in}
+\setlength{\headsep}{0.75 in}
+\setlength{\parindent}{0 in}
+\setlength{\parskip}{0.1 in}
+
+%
+% The following commands set up the lecnum (lecture number)
+% counter and make various numbering schemes work relative
+% to the lecture number.
+%
+\newcounter{lecnum}
+\renewcommand{\thepage}{\thelecnum-\arabic{page}}
+\renewcommand{\thesection}{\thelecnum.\arabic{section}}
+\renewcommand{\theequation}{\thelecnum.\arabic{equation}}
+\renewcommand{\thefigure}{\thelecnum.\arabic{figure}}
+\renewcommand{\thetable}{\thelecnum.\arabic{table}}
+
+%
+% The following macro is used to generate the header.
+%
+\newcommand{\lecture}[4]{
+   \pagestyle{myheadings}
+   \thispagestyle{plain}
+   \newpage
+   \setcounter{lecnum}{#1}
+   \setcounter{page}{1}
+   \noindent
+   \begin{center}
+   \framebox{
+      \vbox{\vspace{2mm}
+    \hbox to 6.28in { {\bf EE 382C/361C: Multicore Computing
+                        \hfill Fall 2016} }
+       \vspace{4mm}
+       \hbox to 6.28in { {\Large \hfill Lecture #1: #2  \hfill} }
+       \vspace{2mm}
+       \hbox to 6.28in { {\it Lecturer: #3 \hfill Scribe: #4} }
+      \vspace{2mm}}
+   }
+   \end{center}
+   \markboth{Lecture #1: #2}{Lecture #1: #2}
+   %{\bf Disclaimer}: {\it These notes have not been subjected to the
+   %usual scrutiny reserved for formal publications.  They may be distributed
+   %outside this class only with the permission of the Instructor.}
+   \vspace*{4mm}
+}
+
+%
+% Convention for citations is authors' initials followed by the year.
+% For example, to cite a paper by Leighton and Maggs you would type
+% \cite{LM89}, and to cite a paper by Strassen you would type \cite{S69}.
+% (To avoid bibliography problems, for now we redefine the \cite command.)
+% Also commands that create a suitable format for the reference list.
+\renewcommand{\cite}[1]{[#1]}
+\def\beginrefs{\begin{list}%
+        {[\arabic{equation}]}{\usecounter{equation}
+         \setlength{\leftmargin}{2.0truecm}\setlength{\labelsep}{0.4truecm}%
+         \setlength{\labelwidth}{1.6truecm}}}
+\def\endrefs{\end{list}}
+\def\bibentry#1{\item[\hbox{[#1]}]}
+
+%Use this command for a figure; it puts a figure in wherever you want it.
+%usage: \fig{NUMBER}{SPACE-IN-INCHES}{CAPTION}
+\newcommand{\fig}[3]{
+			\vspace{#2}
+			\begin{center}
+			Figure \thelecnum.#1:~#3
+			\end{center}
+	}
+% Use these for theorems, lemmas, proofs, etc.
+\newtheorem{theorem}{Theorem}[lecnum]
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{claim}[theorem]{Claim}
+\newtheorem{corollary}[theorem]{Corollary}
+\newtheorem{definition}[theorem]{Definition}
+\newenvironment{proof}{{\bf Proof:}}{\hfill\rule{2mm}{2mm}}
+
+% **** IF YOU WANT TO DEFINE ADDITIONAL MACROS FOR YOURSELF, PUT THEM HERE:
+
+\begin{document}
+%FILL IN THE RIGHT INFO.
+%\lecture{**LECTURE-NUMBER**}{**DATE**}{**LECTURER**}{**SCRIBE**}
+\lecture{16}{October 20}{Vijay Garg}{Yanfeng Zhao}
+%\footnotetext{These notes are partially based on those of Nigel Mansell.}
+
+% **** YOUR NOTES GO HERE:
+
+% Some general latex examples and examples making use of the
+% macros follow.  
+%**** IN GENERAL, BE BRIEF. LONG SCRIBE NOTES, NO MATTER HOW WELL WRITTEN,
+%**** ARE NEVER READ BY ANYBODY.
+\section{Bitonic Sort}
+
+
+\subsection{Monotonic Sequence}
+\centerline{\includegraphics{Monotonic.png}}
+
+\subsection{Bitonic Sequence}
+\centerline{\includegraphics{BitonicSequence.png}}
+
+{\bf Def}: $X_1 \dots X_n$ is a {\bf bitonic sequence} if there exist $k$ s.t. $X_1 \leq X_2 \leq \dots \leq X_k$ and $X_k \geq X_{k+1} \geq X_{k+2} \geq \dots \geq X_n$ or any circular rotation.
+
+For example:
+
+Bitonic sequence (k = 4): 1, 3, 5, 11, 9, 4, 2
+
+Circular Shift Bitonic Sequence: 2, 1, 3, 5, 11, 9, 4. Notice that 2 was shifted to the front.
+
+{\bf Any monotonic sequence is also bitonic sequence.}
+
+\subsection{Why is this useful?}
+\centerline{\includegraphics{whyUseful.png}}
+
+{\bf Bitonic Merge}
+
+$X_1 \dots X_{n/2} ->$ asc
+
+$X_{n/2+1}\dots X_{n}$ -$>$ des
+
+Max
+\begin{itemize}
+    \item $Y_1$ = max($X_1$, $X_{n/2+1}$)
+    \item $Y_2$ = max($X_2$, $X_{n/2+2}$)
+    \item ...
+\end{itemize}
+Min
+\begin{itemize}
+    \item $Z_1$ = max($X_1$, $X_{n/2+1}$)
+    \item $Z_2$ = max($X_3$, $X_{n/2+3}$)
+    \item ...
+\end{itemize}
+
+{\bf Bitonic Sort Example:}
+
+2 7 11 13 9 5 3 1
+
+2 5 3 1 $<$ 9 7 11 15
+
+2 1 $<$ 3 5 $<$ 9 7 $<$ 11 13
+
+1 $<$ 2 $<$ 3 $<$ 5 $<$ 7 $<$ 9 $<$ 11 $<$ 13
+
+\section{Bitonic Sort Algorithm}
+{\bf BitonicSort (lo, hi)} // assume size = $2^k$ for some $k$
+
+    {\bf Base Case:} If array Size == 1, then return
+    
+    {\bf Recursion:}
+\begin{enumerate}
+	\item Bitonic Sort left side of the array (left half)
+	\item Bitonic Sort right side of the array (right half)
+	\item Compare and exchange if needed pairwise
+	\item Bitonic Merge (L)
+	\item Bitonic Merge (R)
+\end{enumerate}
+
+Steps 3-5 are part of the bitonic merge.
+
+{\bf Example:}
+
+\centerline{\includegraphics{bitonicSortBrick.png}}
+
+\section{Bitonic Sort Time Complexity Analysis}
+{\bf The algorithm in short:}
+
+\begin{itemize}
+    \item BitonicSort(L)
+    \item BitonicSort(R)
+    \item BitonicMerge(L, R)
+\end{itemize}
+
+Notice BitonicSort(L) and BitonicSort(R) can be done in parallel.
+
+$T(n) = T(n/2) + log(n)$
+
+$T(1) = O(1)$
+
+$T(n) = T(n/2) + log(n)$
+      
+$= T(n/4) + log(n-1) + log(n)$
+...
+$= 1+2+3+...+log(n)$
+
+$= O(log^2n)$
+
+
+
+\section*{References}
+\beginrefs
+\bibentry{1}{\sc V. K. ~Garg},
+ Introduction to Multicore Computing
+\endrefs
+
+
+\end{document}
